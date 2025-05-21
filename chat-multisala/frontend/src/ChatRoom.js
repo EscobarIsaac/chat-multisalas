@@ -8,9 +8,12 @@ export default function ChatRoom({ currentPin, username }) {
 
   useEffect(() => {
     socket.on('receive_message', ({ author, message }) => {
-      const isMe = author === username;
       const formatted =
-        author === 'Sistema' ? message : isMe ? `Tú: ${message}` : `${author}: ${message}`;
+        author === 'Sistema'
+          ? message
+          : author === username
+          ? `Tú: ${message}`
+          : `${author}: ${message}`;
       setChat(prev => [...prev, formatted]);
     });
 
@@ -43,25 +46,32 @@ export default function ChatRoom({ currentPin, username }) {
   return (
     <div className="chat-container">
       <h2>Chat en Sala PIN: {currentPin}</h2>
+
       <div className="chat-box">
         {chat.map((msg, i) => {
           if (msg.startsWith("Tú: ")) {
             return <div key={i} className="message you">{msg}</div>;
-          } else if (msg.startsWith("Usuario ")) {
-            return <div key={i} className="message system">{msg}</div>;
-          } else if (msg.includes("salió del chat")) {
+          } else if (msg.startsWith("Usuario ") || msg.includes("salió del chat")) {
             return <div key={i} className="message system">{msg}</div>;
           } else {
             return <div key={i} className="message other">{msg}</div>;
           }
         })}
       </div>
+
       <input
         type="text"
         value={message}
         onChange={e => setMessage(e.target.value)}
+        onKeyDown={e => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            sendMessage();
+          }
+        }}
         placeholder="Mensaje"
       />
+
       <div>
         <button className="enviar" onClick={sendMessage}>Enviar</button>
         <button className="salir" onClick={salir}>Salir</button>
